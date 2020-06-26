@@ -17,50 +17,90 @@ class Knight_Move_Tree
 
   end
 
-  def build_tree(starting_node = @root_node)
-    #use this function to continue building new nodes, until we've found the target. 
-    #then we can use this tree to find the path, and the number of moves to target
+  # def level_tree(starting_node = @root_node)
+  #   # until @graph_contains_target
+  #     traverse_level(starting_node)
 
-    # 10.times do
-    until @graph_contains_target
-      moves = starting_node.moves
-      #at this stage, the children are actually just an array of positions, not an array of nodes.
-      children_of_starting_node = []
-      moves.each do |move| 
-        # if(@graph_contains_target)
-        #   #we can ignore the rest of the potential moves array as we've already found our target
-        #   next
+  #   # end
+
+  # end
+
+  def traverse_level(starting_node = @root_node)
+    #traverse the tree in level order until the target is found
+    #this method also builds the next level in the tree when it is required.
+    output = []
+    queue = []
+    queue.push(starting_node)
+    while(queue.length > 0) 
+      current_node = queue.shift
+      # puts "traversing level #{current_node}"
+      if(current_node.is_target?(current_node.position, @target))
+        puts "found the target in #{current_node}"
+        return
+      else
+        current_node.make_children_nodes
+        # puts "didnt find, heres node #{current_node}"
+        # if(current_node.children)
+          current_node.children.each do |child|
+            queue.push(child)
+          end
         # end
-        #loop over the array of eligible moves, make a node, and set the current nodes children = to the node array here.
-        move_node = KnightNode.new(move)
-        children_of_starting_node.push(move_node)
-        #make a node and push it onto this array.
-        # puts move_node.is_target?(move_node.position, @target)
-        # puts "move = #{move} target = #{@target}"
-        starting_node.children = children_of_starting_node
 
-        if(move_node.is_target?(move, @target))
-          @graph_contains_target = true
-          puts "\n\n\nyay found it\n\n\n"
-          puts "starting node = #{starting_node} "
-          puts "move node = #{move_node}"
-        else
-          puts "starting node = #{starting_node} "
-          puts "move node = #{move_node}"
-          build_tree(move_node)
-
-          
-        end
       end
 
-      
     end
-  end
-
-  def find_path(previously_visited = [], starting_node = @root_node, target = @target )
-
 
   end
+
+
+
+
+
+
+  def find_path(previously_visited = [], current_node = @root_node, target = @target )
+    if(current_node.position == target)
+      return [previously_visited, current_node]
+    elsif (current_node.children)
+      previously_visited.push(current_node)
+      current_node.children.each do |child|
+        find_path(previously_visited, child)
+      end
+    else
+      # puts "shoot"
+    end
+
+  end
+
+#   def find_with_parent(starting_node = @root, parent_node = nil, value)
+#     #find value, return array of nodes 
+#     #first value is the parent, second is the node with the target value
+#     #with the value, or false if not found
+#     #use recursion to search through sub trees
+    
+#     if(value == starting_node.data)
+
+#       return [parent_node, starting_node]
+
+#     elsif(value < starting_node.data)
+
+#       unless(starting_node.left_child.nil?)
+#         find_with_parent(starting_node.left_child, starting_node, value)
+#       else
+#         return false
+#       end
+
+#     else
+
+#       unless(starting_node.right_child.nil?)
+#         find_with_parent(starting_node.right_child, starting_node, value)
+#       else
+#         return false
+#       end
+
+#     end
+# end
+
+
 
   # def build_new_level(starting_node)
 
@@ -144,6 +184,15 @@ class KnightNode
     return output_moves
   end 
 
+  def make_children_nodes
+    children = []
+    @moves.each do |move|
+      child = KnightNode.new(move)
+      children.push(child)
+    end
+    @children = children
+  end
+
   def on_game_board?(position)
     #simple helper function to determine if the space passed in, is on the legal board
     # if((BOARD_X.include?(position[0]) && BOARD_Y.include?(position[1]))
@@ -169,11 +218,20 @@ class KnightNode
 end
 
 start = [0,0]
-target = [7,6]
+target = [7,7]
 # test_node = KnightNode.new(start, target)
 
 # print test_node.find_moves
 
 tree = Knight_Move_Tree.new(start, target)
 
-tree.build_tree
+# tree.build_tree
+
+tree.traverse_level
+path = tree.find_path
+puts "\n\nfound the square in #{path.length-1} moves! \n\n"
+# puts "\n\npath: #{tree.find_path}"
+
+path.each do |node|
+  puts "position: #{node.position}"
+end
