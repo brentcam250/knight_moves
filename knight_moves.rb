@@ -10,7 +10,7 @@ ELIGIBLE_MOVES = [ [1,2], [2,1], [2,-1], [1,-2], [-1,-2], [-2,-1], [-2,1], [-1,2
 class Knight_Move_Tree
   attr_accessor :position, :graph_contains_target
   def initialize(position, target)
-    @root_node = KnightNode.new(position)
+    @root_node = KnightNode.new(position, nil)
     # @children = nil 
     @target = target
     @graph_contains_target = false
@@ -28,15 +28,20 @@ class Knight_Move_Tree
   def traverse_level(starting_node = @root_node)
     #traverse the tree in level order until the target is found
     #this method also builds the next level in the tree when it is required.
-    output = []
+    # output = []
     queue = []
     queue.push(starting_node)
     while(queue.length > 0) 
       current_node = queue.shift
       # puts "traversing level #{current_node}"
+      # output.push(current_node.position)
+      # puts "currently at #{current_node.position}"
       if(current_node.is_target?(current_node.position, @target))
-        puts "found the target in #{current_node}"
-        return
+        # puts "found the target in #{current_node}"
+        # puts "output is currently #{output}" 
+        # puts "currents parent = #{current_node.parent}"
+        return current_node
+        # return output
       else
         current_node.make_children_nodes
         # puts "didnt find, heres node #{current_node}"
@@ -49,21 +54,34 @@ class Knight_Move_Tree
       end
 
     end
+    # return output
 
   end
 
 
+  def trace_ancestors(current_node)
+    #method to trace backwards through the tree from node until the root, 
+    #reverses the output to show the path we would need to take from parent to target
+    moves = []
+    until(current_node.parent.nil?)
+      moves.push(current_node.position)
+      current_node = current_node.parent
+    end
+    return moves.reverse
+  end
 
 
 
-
-  def find_path(previously_visited = [], current_node = @root_node, target = @target )
+  def find_path(previously_visited = [], current_node = @root_node, target = @target)
     if(current_node.position == target)
-      return [previously_visited, current_node]
+      previously_visited.push(current_node)
+      return previously_visited
     elsif (current_node.children)
       previously_visited.push(current_node)
+      #we've visited this node, need to keep track of that.
       current_node.children.each do |child|
-        find_path(previously_visited, child)
+        # puts " child #{child}"
+        find_path(previously_visited, child, target)
       end
     else
       # puts "shoot"
@@ -71,90 +89,21 @@ class Knight_Move_Tree
 
   end
 
-#   def find_with_parent(starting_node = @root, parent_node = nil, value)
-#     #find value, return array of nodes 
-#     #first value is the parent, second is the node with the target value
-#     #with the value, or false if not found
-#     #use recursion to search through sub trees
-    
-#     if(value == starting_node.data)
-
-#       return [parent_node, starting_node]
-
-#     elsif(value < starting_node.data)
-
-#       unless(starting_node.left_child.nil?)
-#         find_with_parent(starting_node.left_child, starting_node, value)
-#       else
-#         return false
-#       end
-
-#     else
-
-#       unless(starting_node.right_child.nil?)
-#         find_with_parent(starting_node.right_child, starting_node, value)
-#       else
-#         return false
-#       end
-
-#     end
-# end
 
 
-
-  # def build_new_level(starting_node)
-
-  # end
-
-  # def level_order(starting_node)
-  #   output = []
-  #   queue = []
-  #   queue.push[starting_node]
-  #   until(starting_node.is_target?)
-  #     current_node = queue.shift
-  #     output.push(current_node.position)
-
-  #   end
-  # end
-
-    # #block is a starting node, reads until the bottom
-    # def level_order(block = @root)
-    #   #can be either iterative or recursive
-    #   output = []
-    #   queue = []
-    #   queue.push(block)
-    #   while(queue.length > 0)
-    #     current_node = queue.shift
-    #     # puts "printing out kids #{current_node.data}"
-    #     output.push(current_node.data)
-    #     children = current_node.return_children
-    #     if(children)
-    #       children.each do |child|
-    #         queue.push(child)
-    #       end
-    #     end
-    #   end
-    #   return output
-    # end
-  
   
 
 end
 
 
 class KnightNode
-  attr_accessor :position, :children, :moves
-  # def initialize(position, target)
-  #   @position = position
-  #   @target = target
-  #   # @found_target = false
-  #   @potential_moves = find_moves(position) unless @found_target
-  # end
-  
-  def initialize(position)
+  attr_accessor :position, :children, :moves, :parent
+
+  def initialize(position, parent)
     @position = position
     @moves = find_moves(position)
     @children = nil
+    @parent = parent
   end
   
   def find_moves(starting_position = @position)
@@ -187,7 +136,7 @@ class KnightNode
   def make_children_nodes
     children = []
     @moves.each do |move|
-      child = KnightNode.new(move)
+      child = KnightNode.new(move, self)
       children.push(child)
     end
     @children = children
@@ -212,13 +161,14 @@ class KnightNode
   end
 
   def to_s 
-    output = "KNIGHTNODE: position: #{@position} moves: #{@moves} children #{@children ? "number of children = #{@children.length} they are : #{@children} ": "nil"}" 
+    # output = "KNIGHTNODE: position: #{@position} moves: #{@moves} children #{@children ? "number of children = #{@children.length} they are : #{@children} ": "nil"}" 
+    output = "KNIGHTNODE: position: #{@position} moves: #{@moves}"
   end
 
 end
 
 start = [0,0]
-target = [7,7]
+target = [3,3]
 # test_node = KnightNode.new(start, target)
 
 # print test_node.find_moves
@@ -227,11 +177,10 @@ tree = Knight_Move_Tree.new(start, target)
 
 # tree.build_tree
 
-tree.traverse_level
-path = tree.find_path
-puts "\n\nfound the square in #{path.length-1} moves! \n\n"
-# puts "\n\npath: #{tree.find_path}"
+target_node = tree.traverse_level
 
-path.each do |node|
-  puts "position: #{node.position}"
-end
+ancestors = tree.trace_ancestors(target_node)
+
+
+puts "made it from #{start} to #{target} in #{ancestors.length} moves!"
+puts "moves = #{ancestors}"
