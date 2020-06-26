@@ -2,59 +2,37 @@
 BOARD_X = 0..7
 BOARD_Y = 0..7
 
-# BOARD_X = 0..3
-# BOARD_Y = 0..3
-
 ELIGIBLE_MOVES = [ [1,2], [2,1], [2,-1], [1,-2], [-1,-2], [-2,-1], [-2,1], [-1,2] ]
 
 class Knight_Move_Tree
   attr_accessor :position, :graph_contains_target
   def initialize(position, target)
     @root_node = KnightNode.new(position, nil)
-    # @children = nil 
     @target = target
     @graph_contains_target = false
 
   end
 
-  # def level_tree(starting_node = @root_node)
-  #   # until @graph_contains_target
-  #     traverse_level(starting_node)
-
-  #   # end
-
-  # end
-
   def traverse_level(starting_node = @root_node)
     #traverse the tree in level order until the target is found
     #this method also builds the next level in the tree when it is required.
-    # output = []
+
     queue = []
     queue.push(starting_node)
     while(queue.length > 0) 
       current_node = queue.shift
-      # puts "traversing level #{current_node}"
-      # output.push(current_node.position)
-      # puts "currently at #{current_node.position}"
       if(current_node.is_target?(current_node.position, @target))
-        # puts "found the target in #{current_node}"
-        # puts "output is currently #{output}" 
-        # puts "currents parent = #{current_node.parent}"
         return current_node
-        # return output
       else
         current_node.make_children_nodes
-        # puts "didnt find, heres node #{current_node}"
-        # if(current_node.children)
+
           current_node.children.each do |child|
             queue.push(child)
           end
-        # end
 
       end
 
     end
-    # return output
 
   end
 
@@ -69,28 +47,6 @@ class Knight_Move_Tree
     end
     return moves.reverse
   end
-
-
-
-  def find_path(previously_visited = [], current_node = @root_node, target = @target)
-    if(current_node.position == target)
-      previously_visited.push(current_node)
-      return previously_visited
-    elsif (current_node.children)
-      previously_visited.push(current_node)
-      #we've visited this node, need to keep track of that.
-      current_node.children.each do |child|
-        # puts " child #{child}"
-        find_path(previously_visited, child, target)
-      end
-    else
-      # puts "shoot"
-    end
-
-  end
-
-
-
   
 
 end
@@ -117,17 +73,7 @@ class KnightNode
       y_move = move[1]
       potential_new_space = [(x_pos + x_move), (y_pos + y_move)]
       if(on_game_board?(potential_new_space))
-        # puts "pushing #{potential_new_space} "
-        
-        # new_position_node = KnightNode.new(potential_new_space)
-        # output_moves.push(new_position_node)
-        #create a new node and push it onto the output array.
-
         output_moves.push(potential_new_space)
-        # if(is_target?(potential_new_space))
-        #   # @found_target = true
-        #   puts "YAY WINNER SPACE from #{starting_position} #{potential_new_space} == target #{@target}"
-        # end
       end
    end
     return output_moves
@@ -144,7 +90,7 @@ class KnightNode
 
   def on_game_board?(position)
     #simple helper function to determine if the space passed in, is on the legal board
-    # if((BOARD_X.include?(position[0]) && BOARD_Y.include?(position[1]))
+
     if((BOARD_X.include?(position[0])) && (BOARD_Y.include?(position[1])))
       return true
     else
@@ -167,20 +113,53 @@ class KnightNode
 
 end
 
-start = [0,0]
-target = [3,3]
-# test_node = KnightNode.new(start, target)
-
-# print test_node.find_moves
-
-tree = Knight_Move_Tree.new(start, target)
-
-# tree.build_tree
-
-target_node = tree.traverse_level
-
-ancestors = tree.trace_ancestors(target_node)
 
 
-puts "made it from #{start} to #{target} in #{ancestors.length} moves!"
-puts "moves = #{ancestors}"
+def knight_moves_random()
+  x_start = rand(0..7)
+  y_start = rand(0..7)
+  x_target = rand(0..7)
+  y_target = rand(0..7)
+  start = [x_start, y_start]
+  target = [x_target, y_target]
+  tree = Knight_Move_Tree.new(start,target)
+  target_node = tree.traverse_level
+  path = tree.trace_ancestors(target_node)
+
+  puts "\nmade it from #{start} to #{target} in #{path.length} moves!"
+  puts "moves = #{path}"
+
+
+end
+
+def knight_moves()
+  puts "please enter a starting x coordinate"
+  x_start = get_coord()
+  puts "please enter a starting y coordinate"
+  y_start = get_coord()
+  puts "please enter a target x coordinate"
+  x_target = get_coord()
+  puts "please enter a target y coordinate"
+  y_target = get_coord()
+  start = [x_start, y_start]
+  target = [x_target, y_target]
+  tree = Knight_Move_Tree.new(start,target)
+  target_node = tree.traverse_level
+  path = tree.trace_ancestors(target_node)
+
+  puts "\nmade it from #{start} to #{target} in #{path.length} moves!"
+  puts "moves = #{path}"
+
+
+end
+
+def get_coord()
+  coord = gets.chomp.to_i
+  until((0..7).member?(coord))
+    puts "please enter a number from 0 to 7"
+    coord = gets.chomp.to_i
+  end 
+  return coord
+end
+
+knight_moves_random()
